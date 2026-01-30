@@ -310,22 +310,21 @@ function buildDnsConfig({ mode, fakeIpFilter }) {
             "119.29.29.29",
             "223.5.5.5"
         ],
+      "nameserver-policy": {
+            "geosite:cn": [
+                "119.29.29.29",
+                "223.5.5.5",
+                "https://doh.pub/dns-query"
+            ]
+        },
         "nameserver": [
-            "system",
-            "223.5.5.5",
-            "119.29.29.29",
-            "180.184.1.1"
-        ],
-        "fallback": [
-            "quic://dns0.eu",
-            "https://dns.cloudflare.com/dns-query",
-            "https://dns.sb/dns-query",
-            "tcp://208.67.222.222",
-            "tcp://8.26.56.2"
+          "https://dns.cloudflare.com/dns-query#手动选择",
+          "https://dns.google/dns-query#手动选择"
         ],
         "proxy-server-nameserver": [
-            "https://dns.alidns.com/dns-query",
-            "tls://dot.pub"
+            "119.29.29.29",
+            "223.5.5.5",
+            "114.114.114.114"
         ]
     };
 
