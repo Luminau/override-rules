@@ -69,6 +69,19 @@ proxy-groups:
     interval: 180
     tolerance: 20
     lazy: false
+  - name: 苹果服务
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Apple.png
+    type: select
+    proxies:
+      - 直连
+      - 香港节点
+      - 台湾节点
+      - 新加坡节点
+      - 日本节点
+      - 美国节点
+      - 低倍率节点
+      - 选择代理
+      - 手动选择
   - name: 静态资源
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloudflare.png
     type: select
@@ -221,6 +234,7 @@ proxy-groups:
       - 前置代理
       - 落地节点
       - 故障转移
+      - 苹果服务
       - 静态资源
       - AI
       - Crypto
@@ -255,6 +269,13 @@ rule-providers:
     interval: 86400
     url: https://adrules.top/adrules-mihomo.mrs
     path: ./ruleset/ADBlock.mrs
+  Apple:
+    type: http
+    behavior: classical
+    format: text
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Apple.list
+    path: ./ruleset/Apple.list
   SogouInput:
     type: http
     behavior: classical
@@ -331,6 +352,7 @@ rules:
   - RULE-SET,AdditionalFilter,广告拦截
   - RULE-SET,SogouInput,搜狗输入法
   - DOMAIN-SUFFIX,truthsocial.com,Truth Social
+  - RULE-SET,Apple,苹果服务
   - RULE-SET,StaticResources,静态资源
   - RULE-SET,CDNResources,静态资源
   - RULE-SET,AdditionalCDNResources,静态资源
@@ -392,20 +414,18 @@ dns:
   default-nameserver:
     - 119.29.29.29
     - 223.5.5.5
+  nameserver-policy:
+    geosite:cn:
+      - 119.29.29.29
+      - 223.5.5.5
+      - https://doh.pub/dns-query
   nameserver:
-    - system
-    - 223.5.5.5
-    - 119.29.29.29
-    - 180.184.1.1
-  fallback:
-    - quic://dns0.eu
-    - https://dns.cloudflare.com/dns-query
-    - https://dns.sb/dns-query
-    - tcp://208.67.222.222
-    - tcp://8.26.56.2
+    - https://dns.cloudflare.com/dns-query#手动选择
+    - https://dns.google/dns-query#手动选择
   proxy-server-nameserver:
-    - https://dns.alidns.com/dns-query
-    - tls://dot.pub
+    - 119.29.29.29
+    - 223.5.5.5
+    - 114.114.114.114
   fake-ip-filter:
     - geosite:private
     - geosite:connectivity-check
