@@ -2,6 +2,9 @@
 powerfullz 的 Substore 订阅转换脚本
 https://github.com/powerfullz/override-rules
 
+*/
+
+/*
 支持的传入参数：
 - loadbalance: 启用负载均衡（url-test/load-balance，默认 false）
 - landing: 启用落地节点功能（如机场家宽/星链/落地分组，默认 false）
@@ -33,12 +36,6 @@ function parseNumber(value, defaultValue = 0) {
 
 /**
  * 解析传入的脚本参数，并将其转换为内部使用的功能开关（feature flags）。
- * @param {object} args - 传入的原始参数对象，如 $arguments。
- * @returns {object} - 包含所有功能开关状态的对象。
- *
- * 该函数通过一个 `spec` 对象定义了外部参数名（如 `loadbalance`）到内部变量名（如 `loadBalance`）的映射关系。
- * 它会遍历 `spec` 中的每一项，对 `args` 对象中对应的参数值调用 `parseBool` 函数进行布尔化处理，
- * 并将结果存入返回的对象中。
  */
 function buildFeatureFlags(args) {
     const spec = {
@@ -56,7 +53,6 @@ function buildFeatureFlags(args) {
         return acc;
     }, {});
 
-    // 单独处理数字参数
     flags.countryThreshold = parseNumber(args.threshold, 0);
 
     return flags;
@@ -98,8 +94,6 @@ const PROXY_GROUPS = {
 const buildList = (...elements) => elements.flat().filter(Boolean);
 
 function buildBaseLists({ landing, lowCost, countryGroupNames }) {
-    // 使用辅助函数和常量，以声明方式构建各个代理列表
-
     // “选择节点”组的候选列表
     const defaultSelector = buildList(
         PROXY_GROUPS.FALLBACK,
@@ -149,6 +143,16 @@ const ruleProviders = {
         "url": "https://adrules.top/adrules-mihomo.mrs",
         "path": "./ruleset/ADBlock.mrs"
     },
+    // --- 新增 Apple 规则源 ---
+    "Apple": {
+        "type": "http",
+        "behavior": "classical",
+        "format": "text",
+        "interval": 86400,
+        "url": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Apple.list",
+        "path": "./ruleset/Apple.list"
+    },
+    // -----------------------
     "SogouInput": {
         "type": "http",
         "behavior": "classical",
@@ -236,6 +240,9 @@ const baseRules = [
     `RULE-SET,AdditionalFilter,广告拦截`,
     `RULE-SET,SogouInput,搜狗输入法`,
     `DOMAIN-SUFFIX,truthsocial.com,Truth Social`,
+    // --- 新增 Apple 规则 ---
+    `RULE-SET,Apple,苹果服务`,
+    // ----------------------
     `RULE-SET,StaticResources,静态资源`,
     `RULE-SET,CDNResources,静态资源`,
     `RULE-SET,AdditionalCDNResources,静态资源`,
@@ -438,36 +445,31 @@ function parseCountries(config) {
     // 用来累计各国节点数
     const countryCounts = Object.create(null);
 
-    // 构建地区正则表达式：区分大小写（避免 node 里的 "de" 误匹配到 "DE" -> 德国）
+    // 构建地区正则表达式
     const compiledRegex = {};
     for (const [country, meta] of Object.entries(countriesMeta)) {
-        // 兼容旧配置：如果 pattern 仍以 (?i) 开头，这里会剥离掉以避免 JS RegExp 报错
         compiledRegex[country] = new RegExp(meta.pattern.replace(/^\(\?i\)/, ''));
     }
 
     // 逐个节点进行匹配与统计
     for (const proxy of proxies) {
         const name = proxy.name || '';
-
-        // 过滤掉不想统计的 ISP 节点
         if (ispRegex.test(name)) continue;
 
-        // 找到第一个匹配到的地区就计数并终止本轮
         for (const [country, regex] of Object.entries(compiledRegex)) {
             if (regex.test(name)) {
                 countryCounts[country] = (countryCounts[country] || 0) + 1;
-                break;    // 避免一个节点同时累计到多个地区
+                break;
             }
         }
     }
 
-    // 将结果对象转成数组形式
     const result = [];
     for (const [country, count] of Object.entries(countryCounts)) {
         result.push({ country, count });
     }
 
-    return result;   // [{ country: 'Japan', count: 12 }, ...]
+    return result;
 }
 
 
@@ -562,6 +564,14 @@ function buildProxyGroups({
             "tolerance": 20,
             "lazy": false
         },
+        // --- Apple 策略组 ---
+        {
+            "name": "苹果服务",
+            "icon": "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Apple.png",
+            "type": "select",
+            "proxies": defaultProxiesDirect 
+        },
+        // ------------------
         {
             "name": "静态资源",
             "icon": "https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloudflare.png",
@@ -776,4 +786,4 @@ function main(config) {
     });
 
     return resultConfig;
-}
+} 
