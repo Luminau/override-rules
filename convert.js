@@ -1,12 +1,7 @@
-/*!
-powerfullz 的 Substore 订阅转换脚本
-https://github.com/powerfullz/override-rules
-
-*/
-
 /*
 支持的传入参数：
-- loadbalance: 启用负载均衡（url-test/load-balance，默认 false）
+- loadbalance: 策略组模式。可选值：select(默认), url-test, load-balance。
+               (兼容旧参数：传入 true 则等同于 load-balance)
 - landing: 启用落地节点功能（如机场家宽/星链/落地分组，默认 false）
 - ipv6: 启用 IPv6 支持（默认 false）
 - full: 输出完整配置（适合纯内核启动，默认 false）
@@ -35,11 +30,29 @@ function parseNumber(value, defaultValue = 0) {
 }
 
 /**
+ * 解析策略组模式 (select / url-test / load-balance)
+ */
+function parseStrategy(value) {
+    if (!value) return "select";
+    const lower = String(value).toLowerCase();
+    
+    // 显式指定模式
+    if (lower === "url-test" || lower === "urltest") return "url-test";
+    if (lower === "load-balance" || lower === "loadbalance") return "load-balance";
+    if (lower === "select") return "select";
+
+    // 兼容旧的 boolean 参数 (true -> load-balance)
+    if (lower === "true" || lower === "1") return "load-balance";
+
+    return "select";
+}
+
+/**
  * 解析传入的脚本参数，并将其转换为内部使用的功能开关（feature flags）。
  */
 function buildFeatureFlags(args) {
     const spec = {
-        loadbalance: "loadBalance",
+        // loadbalance 单独处理
         landing: "landing",
         ipv6: "ipv6Enabled",
         full: "fullConfig",
@@ -54,13 +67,15 @@ function buildFeatureFlags(args) {
     }, {});
 
     flags.countryThreshold = parseNumber(args.threshold, 0);
+    // 解析策略组模式
+    flags.groupStrategy = parseStrategy(args.loadbalance);
 
     return flags;
 }
 
 const rawArgs = typeof $arguments !== 'undefined' ? $arguments : {};
 const {
-    loadBalance,
+    groupStrategy, // 新增：策略模式变量
     landing,
     ipv6Enabled,
     fullConfig,
@@ -143,16 +158,33 @@ const ruleProviders = {
         "url": "https://adrules.top/adrules-mihomo.mrs",
         "path": "./ruleset/ADBlock.mrs"
     },
-    // --- 新增 Apple 规则源 ---
+    // --- Apple 规则源 ---
     "Apple": {
         "type": "http",
         "behavior": "classical",
         "format": "text",
         "interval": 86400,
-        "url": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Apple.list",
+        "url": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/Apple.list",
         "path": "./ruleset/Apple.list"
     },
-    // -----------------------
+    // --- Steam 规则源 ---
+    "SteamCN": {
+        "url": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/SteamCN.list",
+        "path": "./ruleset/SteamCN.list",
+        "behavior": "classical",
+        "interval": 86400,
+        "format": "text",
+        "type": "http"
+    },
+    "Steam": {
+        "url": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/Steam.list",
+        "path": "./ruleset/Steam.list",
+        "behavior": "classical",
+        "interval": 86400,
+        "format": "text",
+        "type": "http"
+    },
+    // -------------------------
     "SogouInput": {
         "type": "http",
         "behavior": "classical",
@@ -235,14 +267,57 @@ const ruleProviders = {
     }
 }
 
+// 定义 Twitter 的具体规则列表
+const twitterSpecificRules = [
+    "DOMAIN-SUFFIX,ads-twitter.com",
+    "DOMAIN-SUFFIX,cms-twdigitalassets.com",
+    "DOMAIN-SUFFIX,periscope.tv",
+    "DOMAIN-SUFFIX,pscp.tv",
+    "DOMAIN-SUFFIX,t.co",
+    "DOMAIN-SUFFIX,tellapart.com",
+    "DOMAIN-SUFFIX,tweetdeck.com",
+    "DOMAIN-SUFFIX,twimg.co",
+    "DOMAIN-SUFFIX,twimg.com",
+    "DOMAIN-SUFFIX,twimg.org",
+    "DOMAIN-SUFFIX,twitpic.com",
+    "DOMAIN-SUFFIX,twitter.biz",
+    "DOMAIN-SUFFIX,twitter.com",
+    "DOMAIN-SUFFIX,twitter.jp",
+    "DOMAIN-SUFFIX,twittercommunity.com",
+    "DOMAIN-SUFFIX,twitterflightschool.com",
+    "DOMAIN-SUFFIX,twitterinc.com",
+    "DOMAIN-SUFFIX,twitteroauth.com",
+    "DOMAIN-SUFFIX,twitterstat.us",
+    "DOMAIN-SUFFIX,twtrdns.net",
+    "DOMAIN-SUFFIX,twttr.com",
+    "DOMAIN-SUFFIX,twttr.net",
+    "DOMAIN-SUFFIX,twvid.com",
+    "DOMAIN-SUFFIX,vine.co",
+    "DOMAIN-SUFFIX,x.com",
+    "DOMAIN-KEYWORD,twitter",
+    "IP-CIDR,192.133.76.0/22",
+    "IP-CIDR,199.16.156.0/22",
+    "IP-CIDR,199.59.148.0/22",
+    "IP-CIDR,199.96.56.0/21",
+    "IP-CIDR,202.160.128.0/22",
+    "IP-CIDR,209.237.192.0/19",
+    "IP-CIDR,69.195.160.0/19"
+];
+
+// 将规则映射到 "Twitter" 策略组
+const formattedTwitterRules = twitterSpecificRules.map(rule => `${rule},Twitter`);
+
 const baseRules = [
     `RULE-SET,ADBlock,广告拦截`,
     `RULE-SET,AdditionalFilter,广告拦截`,
     `RULE-SET,SogouInput,搜狗输入法`,
     `DOMAIN-SUFFIX,truthsocial.com,Truth Social`,
-    // --- 新增 Apple 规则 ---
     `RULE-SET,Apple,苹果服务`,
-    // ----------------------
+    `RULE-SET,SteamCN,SteamCN`, // 直连优先
+    `RULE-SET,Steam,Steam`,     // 代理优先
+    // --- 插入硬编码的 Twitter 规则 ---
+    ...formattedTwitterRules, 
+    // -------------------------------
     `RULE-SET,StaticResources,静态资源`,
     `RULE-SET,CDNResources,静态资源`,
     `RULE-SET,AdditionalCDNResources,静态资源`,
@@ -473,34 +548,34 @@ function parseCountries(config) {
 }
 
 
-function buildCountryProxyGroups({ countries, landing, loadBalance }) {
+function buildCountryProxyGroups({ countries, landing, strategy }) {
     const groups = [];
     const baseExcludeFilter = "0\\.[0-5]|低倍率|省流|大流量|实验性";
     const landingExcludeFilter = "(?i)家宽|家庭|家庭宽带|商宽|商业宽带|星链|Starlink|落地";
-    const groupType = loadBalance ? "load-balance" : "url-test";
 
     for (const country of countries) {
         const meta = countriesMeta[country];
         if (!meta) continue;
 
+        // 基础配置
         const groupConfig = {
             "name": `${country}${NODE_SUFFIX}`,
             "icon": meta.icon,
             "include-all": true,
             "filter": meta.pattern,
             "exclude-filter": landing ? `${landingExcludeFilter}|${baseExcludeFilter}` : baseExcludeFilter,
-            "type": groupType
+            "type": strategy
         };
-
-        if (!loadBalance) {
+        
+        // 如果不是手动选择(select)，则添加测速所需的参数
+        if (strategy !== 'select') {
             Object.assign(groupConfig, {
                 "url": "https://cp.cloudflare.com/generate_204",
-                "interval": 60,
-                "tolerance": 20,
-                "lazy": false
+                "interval": 300,
+                "tolerance": 50
             });
         }
-
+        
         groups.push(groupConfig);
     }
 
@@ -571,7 +646,20 @@ function buildProxyGroups({
             "type": "select",
             "proxies": defaultProxiesDirect 
         },
-        // ------------------
+        // --- Steam 策略组 ---
+        {
+            "name": "SteamCN",
+            "icon": "https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Steam.png",
+            "type": "select",
+            "proxies": defaultProxiesDirect
+        },
+        {
+            "name": "Steam",
+            "icon": "https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Steam.png",
+            "type": "select",
+            "proxies": defaultProxies
+        },
+        // -----------------------
         {
             "name": "静态资源",
             "icon": "https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloudflare.png",
@@ -598,7 +686,7 @@ function buildProxyGroups({
         },
         {
             "name": "Microsoft",
-            "icon": "https://gcore.jsdelivr.net/gh/powerfullz/override-rules@master/icons/Microsoft_Copilot.png",    
+            "icon": "https://gcore.jsdelivr.net/gh/powerfullz/override-rules@master/icons/Microsoft_Copilot.png",   
             "type": "select",
             "proxies": defaultProxies
         },
@@ -632,6 +720,14 @@ function buildProxyGroups({
             "type": "select",
             "proxies": defaultProxies
         },
+        // --- Twitter 策略组 (保持不变，作为规则指向的目标) ---
+        {
+            "name": "Twitter",
+            "icon": "https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Twitter.png",
+            "type": "select",
+            "proxies": defaultProxies // 使用默认代理列表
+        },
+        // -------------------------
         {
             "name": "Spotify",
             "icon": "https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Spotify.png",
@@ -726,8 +822,8 @@ function main(config) {
         defaultFallback
     } = buildBaseLists({ landing, lowCost, countryGroupNames });
 
-    // 为地区构建对应的 url-test / load-balance 组
-    const countryProxyGroups = buildCountryProxyGroups({ countries, landing, loadBalance });
+    // 为地区构建对应的 select/url-test/load-balance 组
+    const countryProxyGroups = buildCountryProxyGroups({ countries, landing, strategy: groupStrategy });
 
     // 生成代理组
     const proxyGroups = buildProxyGroups({
@@ -742,7 +838,7 @@ function main(config) {
     });
     
     // 完整书写 Global 代理组以确保兼容性
-    const globalProxies = proxyGroups.map(item => item.name);  
+    const globalProxies = proxyGroups.map(item => item.name);   
     proxyGroups.push(
         {
             "name": "GLOBAL",
@@ -786,4 +882,4 @@ function main(config) {
     });
 
     return resultConfig;
-} 
+}
