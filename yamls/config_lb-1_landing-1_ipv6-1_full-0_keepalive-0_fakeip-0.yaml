@@ -56,7 +56,7 @@ proxy-groups:
   - name: 苹果服务
     icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Apple.png
     type: select
-    proxies:
+    proxies: &a1
       - 直连
       - 香港节点
       - 台湾节点
@@ -66,39 +66,47 @@ proxy-groups:
       - 低倍率节点
       - 选择代理
       - 手动选择
+  - name: SteamCN
+    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Steam.png
+    type: select
+    proxies: *a1
+  - name: Steam
+    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Steam.png
+    type: select
+    proxies: &a2
+      - 选择代理
+      - 香港节点
+      - 台湾节点
+      - 新加坡节点
+      - 日本节点
+      - 美国节点
+      - 低倍率节点
+      - 手动选择
+      - 直连
   - name: 静态资源
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloudflare.png
     type: select
-    proxies: &a1
-      - 选择代理
-      - 香港节点
-      - 台湾节点
-      - 新加坡节点
-      - 日本节点
-      - 美国节点
-      - 低倍率节点
-      - 手动选择
-      - 直连
+    proxies: *a2
   - name: AI
     icon: https://gcore.jsdelivr.net/gh/powerfullz/override-rules@master/icons/chatgpt.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: Crypto
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cryptocurrency_3.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: Google
     icon: https://gcore.jsdelivr.net/gh/powerfullz/override-rules@master/icons/Google.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: Microsoft
     icon: https://gcore.jsdelivr.net/gh/powerfullz/override-rules@master/icons/Microsoft_Copilot.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: YouTube
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/YouTube.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: Bilibili
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/bilibili.png
     type: select
@@ -117,23 +125,27 @@ proxy-groups:
   - name: Netflix
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Netflix.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: TikTok
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/TikTok.png
     type: select
-    proxies: *a1
+    proxies: *a2
+  - name: Twitter
+    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Twitter.png
+    type: select
+    proxies: *a2
   - name: Spotify
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Spotify.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: E-Hentai
     icon: https://gcore.jsdelivr.net/gh/powerfullz/override-rules@master/icons/Ehentai.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: Telegram
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: Truth Social
     icon: https://gcore.jsdelivr.net/gh/powerfullz/override-rules@master/icons/TruthSocial.png
     type: select
@@ -144,15 +156,15 @@ proxy-groups:
   - name: OneDrive
     icon: https://gcore.jsdelivr.net/gh/powerfullz/override-rules@master/icons/Onedrive.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: PikPak
     icon: https://gcore.jsdelivr.net/gh/powerfullz/override-rules@master/icons/PikPak.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: SSH(22端口)
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Server.png
     type: select
-    proxies: *a1
+    proxies: *a2
   - name: 搜狗输入法
     icon: https://gcore.jsdelivr.net/gh/powerfullz/override-rules@master/icons/Sougou.png
     type: select
@@ -184,30 +196,45 @@ proxy-groups:
     filter: 香港|港|HK|hk|Hong Kong|HongKong|hongkong|🇭🇰
     exclude-filter: (?i)家宽|家庭|家庭宽带|商宽|商业宽带|星链|Starlink|落地|0\.[0-5]|低倍率|省流|大流量|实验性
     type: load-balance
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 50
   - name: 台湾节点
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Taiwan.png
     include-all: true
     filter: 台|新北|彰化|TW|Taiwan|🇹🇼
     exclude-filter: (?i)家宽|家庭|家庭宽带|商宽|商业宽带|星链|Starlink|落地|0\.[0-5]|低倍率|省流|大流量|实验性
     type: load-balance
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 50
   - name: 新加坡节点
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png
     include-all: true
     filter: 新加坡|坡|狮城|SG|Singapore|🇸🇬
     exclude-filter: (?i)家宽|家庭|家庭宽带|商宽|商业宽带|星链|Starlink|落地|0\.[0-5]|低倍率|省流|大流量|实验性
     type: load-balance
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 50
   - name: 日本节点
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png
     include-all: true
     filter: 日本|川日|东京|大阪|泉日|埼玉|沪日|深日|JP|Japan|🇯🇵
     exclude-filter: (?i)家宽|家庭|家庭宽带|商宽|商业宽带|星链|Starlink|落地|0\.[0-5]|低倍率|省流|大流量|实验性
     type: load-balance
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 50
   - name: 美国节点
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png
     include-all: true
     filter: 美国|美|US|United States|🇺🇸
     exclude-filter: (?i)家宽|家庭|家庭宽带|商宽|商业宽带|星链|Starlink|落地|0\.[0-5]|低倍率|省流|大流量|实验性
     type: load-balance
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 50
   - name: GLOBAL
     icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Global.png
     include-all: true
@@ -219,6 +246,8 @@ proxy-groups:
       - 落地节点
       - 故障转移
       - 苹果服务
+      - SteamCN
+      - Steam
       - 静态资源
       - AI
       - Crypto
@@ -229,6 +258,7 @@ proxy-groups:
       - Bahamut
       - Netflix
       - TikTok
+      - Twitter
       - Spotify
       - E-Hentai
       - Telegram
@@ -258,8 +288,22 @@ rule-providers:
     behavior: classical
     format: text
     interval: 86400
-    url: https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Apple.list
+    url: https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/Apple.list
     path: ./ruleset/Apple.list
+  SteamCN:
+    url: https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/SteamCN.list
+    path: ./ruleset/SteamCN.list
+    behavior: classical
+    interval: 86400
+    format: text
+    type: http
+  Steam:
+    url: https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/Steam.list
+    path: ./ruleset/Steam.list
+    behavior: classical
+    interval: 86400
+    format: text
+    type: http
   SogouInput:
     type: http
     behavior: classical
@@ -337,6 +381,41 @@ rules:
   - RULE-SET,SogouInput,搜狗输入法
   - DOMAIN-SUFFIX,truthsocial.com,Truth Social
   - RULE-SET,Apple,苹果服务
+  - RULE-SET,SteamCN,SteamCN
+  - RULE-SET,Steam,Steam
+  - DOMAIN-SUFFIX,ads-twitter.com,Twitter
+  - DOMAIN-SUFFIX,cms-twdigitalassets.com,Twitter
+  - DOMAIN-SUFFIX,periscope.tv,Twitter
+  - DOMAIN-SUFFIX,pscp.tv,Twitter
+  - DOMAIN-SUFFIX,t.co,Twitter
+  - DOMAIN-SUFFIX,tellapart.com,Twitter
+  - DOMAIN-SUFFIX,tweetdeck.com,Twitter
+  - DOMAIN-SUFFIX,twimg.co,Twitter
+  - DOMAIN-SUFFIX,twimg.com,Twitter
+  - DOMAIN-SUFFIX,twimg.org,Twitter
+  - DOMAIN-SUFFIX,twitpic.com,Twitter
+  - DOMAIN-SUFFIX,twitter.biz,Twitter
+  - DOMAIN-SUFFIX,twitter.com,Twitter
+  - DOMAIN-SUFFIX,twitter.jp,Twitter
+  - DOMAIN-SUFFIX,twittercommunity.com,Twitter
+  - DOMAIN-SUFFIX,twitterflightschool.com,Twitter
+  - DOMAIN-SUFFIX,twitterinc.com,Twitter
+  - DOMAIN-SUFFIX,twitteroauth.com,Twitter
+  - DOMAIN-SUFFIX,twitterstat.us,Twitter
+  - DOMAIN-SUFFIX,twtrdns.net,Twitter
+  - DOMAIN-SUFFIX,twttr.com,Twitter
+  - DOMAIN-SUFFIX,twttr.net,Twitter
+  - DOMAIN-SUFFIX,twvid.com,Twitter
+  - DOMAIN-SUFFIX,vine.co,Twitter
+  - DOMAIN-SUFFIX,x.com,Twitter
+  - DOMAIN-KEYWORD,twitter,Twitter
+  - IP-CIDR,192.133.76.0/22,Twitter
+  - IP-CIDR,199.16.156.0/22,Twitter
+  - IP-CIDR,199.59.148.0/22,Twitter
+  - IP-CIDR,199.96.56.0/21,Twitter
+  - IP-CIDR,202.160.128.0/22,Twitter
+  - IP-CIDR,209.237.192.0/19,Twitter
+  - IP-CIDR,69.195.160.0/19,Twitter
   - RULE-SET,StaticResources,静态资源
   - RULE-SET,CDNResources,静态资源
   - RULE-SET,AdditionalCDNResources,静态资源
